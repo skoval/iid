@@ -1,7 +1,7 @@
-djokovic_federer_final.xlsx
-atp_points_predicted.RData	
-model_iid.RData
-atp_points_predicted.csv
-model_noniid.RData
-atp_points_predicted.csv.zip
-atp_points_imp.RData
+data/djokovic_federer_final.xlsx
+data/atp_points_predicted.RData	
+data/model_iid.RData
+data/atp_points_predicted.csv
+data/model_noniid.RData
+data/atp_points_predicted.csv.zip
+data/atp_points_imp.RData
