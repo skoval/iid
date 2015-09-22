@@ -1,3 +1,5 @@
+library(dplyr)
+library(lubridate)
 library(deuce)
 data(point_by_point)
 #data(charting_points)
@@ -17,16 +19,19 @@ point_by_point$Set3[index3] <- sapply(point_by_point$Set3[index3], add_semicolon
 point_by_point$Set4[index4] <- sapply(point_by_point$Set4[index4], add_semicolon)
 point_by_point$Set5[index5] <- sapply(point_by_point$Set5[index5], add_semicolon)
 
+point_by_point$year <- year(point_by_point$tny_date)
+
 atp_points <- do.call("rbind", lapply(1:nrow(point_by_point), function(x) {
 	result <- pbp(point_by_point[x,])
 	result$match_id <- paste(point_by_point[x,]$tny_name, 
 		point_by_point[x,]$server1, 
-		point_by_point[x,]$server2, sep = ":")
+		point_by_point[x,]$server2, 
+		point_by_point[x,]$year, sep = ":")
 result
 }))
 
 
-atp_points$tournament <- sub("(.ATP)(.*)(:.*:.*)", "\\2", atp_points$match_id)
+atp_points$tournament <- sub("(.ATP)(.*)(:.*:.*:.*)", "\\2", atp_points$match_id)
 
 # Limit to 250+
 data(atp_matches)
@@ -151,9 +156,6 @@ matches <- unique(atp_points$match_id[atp_points$serving %in% points_played$serv
 
 # Remove if fewer than 3 matches
 atp_points <- atp_points[!(atp_points$match_id %in% matches), ]
-
-atp_points$cumpoints <- unlist(tapply(atp_points$match_id, atp_points$match_id, 
-			function(x) cumsum(1:length(x)))
 			
 atp_points <- do.call("rbind", lapply(split(atp_points, f = atp_points$match_id), function(obj){
 
@@ -216,6 +218,7 @@ save(atp_points, file = "~/Project/tennis/iid/data/atp_points.RData")
 # Track cumulative sets and games won
 atp_points <- do.call("rbind", lapply(split(atp_points, factor(atp_points$match_id)), function(obj){
 	
+	
 	if(any(obj$tiebreak)){
 		obj$serve_score[obj$max_tiebreak == obj$serve_points] <- "GM"
 		obj$return_score[obj$max_tiebreak == obj$return_points] <- "GM"
@@ -235,14 +238,22 @@ atp_points <- do.call("rbind", lapply(split(atp_points, factor(atp_points$match_
 	
 	names(return_game)[1] <- "player"
 	names(serve_game)[1] <- "player"
-	
-	if(any(return_game$Game == 13 & return_game$games == 1))
-		serve_game <- subset(serve_game, Game != 13) 
-	
-	if(any(serve_game$Game == 13 & serve_game$games == 1))
-		return_game <- subset(return_game, Game != 13) 
-	
 	games_won <- rbind(return_game, serve_game)
+	
+	if(any(return_game$Game == 13)){
+		
+		winners <- rbind(return_game, serve_game)
+		winners <- subset(winners, Game == 13 & games == 1)
+
+		players <- unique(return_game$player)
+		losers <- winners
+		losers$player <- ifelse(losers$player == players[1], players[2], players[1])
+		losers$games <- 0
+		
+		games_won <- subset(games_won, Game != 13)
+		games_won <- rbind(games_won, winners, losers)
+	}
+
 	games_won <- games_won[order(games_won$Set, games_won$Game,games_won$player),]
 	
 	games_won <- games_won %>% 
@@ -251,11 +262,11 @@ atp_points <- do.call("rbind", lapply(split(atp_points, factor(atp_points$match_
 			cumgame = cumsum(games)
 	)
 	
-	if(any(games_won$Game == 13)){ # Check for tiebreaks
-		games_won$cumgame[games_won$Game == 13]	<- games_won$cumgame[games_won$Game == 13] + games_won$games[games_won$Game == 13]
+	# if(any(games_won$Game == 13)){ # Check for tiebreaks
+		# games_won$cumgame[games_won$Game == 13]	<- games_won$cumgame[games_won$Game == 13] + games_won$games[games_won$Game == 13]
 		
-		games_won$max_game[games_won$Game == 13]	<- games_won$max_game[games_won$Game == 13] + games_won$games[games_won$Game == 13]
-	}
+		# games_won$max_game[games_won$Game == 13]	<- games_won$max_game[games_won$Game == 13] + games_won$games[games_won$Game == 13]
+	# }
 	
 	games_won <- games_won %>% 
 		group_by(Set) %>%
@@ -313,3 +324,23 @@ obj
 )
 
 save(atp_points, file = "~/Project/tennis/iid/data/atp_points_imp.RData")
+
+
+# Assign importance value
+load(file = "~/Project/tennis/iid/data/importance.RData")
+source(file = "~/Project/tennis/iid/code/importance.R")
+
+atp_points$bestof3 <- !(atp_points$tournament %in% c("Australian Open","French Open","US Open","Wimbledon"))
+
+atp_points$point_importance <- mapply(importance,
+	point_x = atp_points$serve_points_won,
+	point_y = atp_points$return_points_won,
+	game_x = atp_points$serving_games_won,
+	game_y = atp_points$returning_games_won,	
+	set_x = atp_points$serving_sets_won,
+	set_y = atp_points$returning_sets_won,
+	tiebreak = atp_points$tiebreak,
+	bestof3 = atp_points$bestof3
+)
+
+#save(atp_points, file = "~/Project/tennis/iid/data/atp_points_imp.RData")
