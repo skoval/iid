@@ -212,32 +212,61 @@ atp_points$set_down <- as.numeric(atp_points$set_down)
 
 atp_points$max_tiebreak[!is.finite(atp_points$max_tiebreak)] <- NA
 rownames(atp_points) <- NULL
+atp_points <- unique(atp_points)
+
+# Remove several matches with possible misentry
+max_games <- atp_points  %>%
+	filter(Set < 5) %>%
+	group_by(match_id) %>%
+	summarise(
+		max = max(Game)
+	)
+
+problem_ids <- max_games$match_id[max_games$max > 13]
+atp_points <- atp_points[!(atp_points$match_id %in% problem_ids),]
+
 save(atp_points, file = "~/Project/tennis/iid/data/atp_points.RData")
 
 
 # Track cumulative sets and games won
 atp_points <- do.call("rbind", lapply(split(atp_points, factor(atp_points$match_id)), function(obj){
 	
+	print(obj$match_id[1])
 	
-	if(any(obj$tiebreak)){
-		obj$serve_score[obj$max_tiebreak == obj$serve_points] <- "GM"
-		obj$return_score[obj$max_tiebreak == obj$return_points] <- "GM"
-	}
+	obj <- obj %>%
+		group_by(Game, Set) %>%
+		mutate(
+			points_played = 1:length(Game),
+			last_point = length(Game),
+			serve_ahead = serve_points > return_points,
+			return_ahead = return_points > serve_points,
+			serve_won_game = points_played == last_point & serve_ahead,
+			return_won_game = points_played == last_point & return_ahead,
+			serve_points_won = c(0, serve_points[-length(Game)]),
+			return_points_won = c(0,  return_points[-length(Game)])
+		)
+	
+	# In case of retirement, just give to server
+	obj$serve_won_game[obj$points_played == obj$last_point & 
+		!obj$serve_won_game & 
+		!obj$return_won_game] <- TRUE
+	
 	
 	serve_game <- obj %>%
 		group_by(serving, Game, Set) %>%
 		summarise(
-			games = sum(serve_score == "GM")
+			games = sum(serve_won_game)
 	)
 	
 	return_game <- obj %>%
 		group_by(returning, Game, Set) %>%
 		summarise(
-			games = sum(return_score == "GM")
+			games = sum(return_won_game)
 	)
 	
 	names(return_game)[1] <- "player"
 	names(serve_game)[1] <- "player"
+	
 	games_won <- rbind(return_game, serve_game)
 	
 	if(any(return_game$Game == 13)){
@@ -257,22 +286,10 @@ atp_points <- do.call("rbind", lapply(split(atp_points, factor(atp_points$match_
 	games_won <- games_won[order(games_won$Set, games_won$Game,games_won$player),]
 	
 	games_won <- games_won %>% 
-		group_by(Set, player) %>%
-		mutate(
-			cumgame = cumsum(games)
-	)
-	
-	# if(any(games_won$Game == 13)){ # Check for tiebreaks
-		# games_won$cumgame[games_won$Game == 13]	<- games_won$cumgame[games_won$Game == 13] + games_won$games[games_won$Game == 13]
-		
-		# games_won$max_game[games_won$Game == 13]	<- games_won$max_game[games_won$Game == 13] + games_won$games[games_won$Game == 13]
-	# }
-	
-	games_won <- games_won %>% 
 		group_by(Set) %>%
 		mutate(
-			max_game = max(cumgame),
-			won_set = max_game == cumgame
+			max_game = max(Game),
+			won_set = max_game == Game & games == 1
 	)
 	
 	
@@ -294,9 +311,9 @@ atp_points <- do.call("rbind", lapply(split(atp_points, factor(atp_points$match_
 	)
 	
 	games_won <- games_won %>% 
-		group_by(player, Set) %>%
+		group_by(Set, player) %>%
 		mutate(
-			cumgame = c(0, cumgame[1:(length(player) - 1)])
+			cumgame = c(0, cumsum(games)[1:(length(player) - 1)])
 	)
 	
 	obj$serving_games_won  <- mapply(function(x, game, set){
@@ -315,13 +332,17 @@ atp_points <- do.call("rbind", lapply(split(atp_points, factor(atp_points$match_
 		subset(sets_won, player == x & Set == set)$cum_sets_won 
 	}, x = obj$returning, set = obj$Set)
 	
-	
-	obj$serve_points_won <- c(0, obj$serve_points[-nrow(obj)])
-	obj$return_points_won <- c(0, obj$return_points[-nrow(obj)])
-	
 obj
  })
 )
+
+# Adjust points for games that go to deuce 
+cases <- which((atp_points$serve_points_won >= 4 & atp_points$return_points_won >= 4) & 
+						!atp_points$tiebreak)
+						
+serve_return_diff <- atp_points$serve_points_won[cases]  - atp_points$return_points_won[cases]
+atp_points$serve_points_won[cases] <- ifelse(serve_return_diff >= 1, 4, 3)
+atp_points$return_points_won[cases] <- ifelse(serve_return_diff <= -1, 4, 3)
 
 save(atp_points, file = "~/Project/tennis/iid/data/atp_points_imp.RData")
 
@@ -343,4 +364,10 @@ atp_points$point_importance <- mapply(importance,
 	bestof3 = atp_points$bestof3
 )
 
-#save(atp_points, file = "~/Project/tennis/iid/data/atp_points_imp.RData")
+point_importance <- unlist(atp_points$point_importance)
+null_cases <- sapply(atp_points$point_importance, length) == 0
+atp_points$point_importance[which(null_cases)] <- sample(point_importance, 
+	size = sum(null_cases), replace = TRUE)
+atp_points$point_importance <- unlist(atp_points$point_importance)
+
+save(atp_points, file = "~/Project/tennis/iid/data/atp_points_imp.RData")

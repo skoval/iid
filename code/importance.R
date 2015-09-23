@@ -6,7 +6,7 @@ importance <- function(point_x, point_y, game_x, game_y,
 		win <- ifelse(tiebreak, 7, 4)
 		
 		if(tiebreak) outcomes <- tb_outcomes
-		
+
 		if(!((serve == (win-1) & return == win) | (serve == win & return == (win - 1))))
 			outcomes$importance[outcomes$serve == serve & outcomes$return == return]
 		else{
@@ -21,10 +21,14 @@ importance <- function(point_x, point_y, game_x, game_y,
 		prob5 <- matrix( c(.38, .38, .25, .38, .5, .5, .25, .5, 1), 3, 3, byrow = TRUE)
 		
 		if(bestof3){
-			prob3[x+1,y+1]
+			if(x > 1) x <- 1
+			if(y > 1) y <- 1
+				prob3[x+1,y+1]
 		}
 		else{
-			prob5[x+1, y+1]
+			if(x > 2) x <- 2
+			if(y > 2) y <- 2
+				prob5[x+1, y+1]
 		}
 	}
 	
@@ -37,7 +41,10 @@ importance <- function(point_x, point_y, game_x, game_y,
 			.01, .06, .08, .41, .5, .5,.5,
 			NA, NA, NA, NA, NA, .5, 1
 		), 7, 7, byrow = TRUE)
-	
+		
+		if(x > 6) x <- 6
+		if(y > 6) y <- 6
+		
 	m[x+1, y+1]
 	}
 		
