@@ -2,241 +2,248 @@ library(dplyr)
 library(lubridate)
 library(deuce)
 
-# # data(point_by_point)
-# #data(charting_points)
+data(point_by_point)
+#data(charting_points)
 
-# point_by_point <- point_by_point[point_by_point$tour == "ATP",]
-# point_by_point  <- point_by_point[point_by_point$draw == "Main",]
+point_by_point <- point_by_point[point_by_point$tour == "ATP",]
+point_by_point  <- point_by_point[point_by_point$draw == "Main",]
+point_by_point$year <- year(point_by_point$tny_date)
 
-# index1 <- !grepl(";", point_by_point$Set1) & !is.na(point_by_point$Set1)
-# index2 <- !grepl(";", point_by_point$Set2) & !is.na(point_by_point$Set2)
-# index3 <- !grepl(";", point_by_point$Set3) & !is.na(point_by_point$Set3)
-# index4 <- !grepl(";", point_by_point$Set4) & !is.na(point_by_point$Set4)
-# index5 <- !grepl(";", point_by_point$Set5) & !is.na(point_by_point$Set5)
+point_by_point$match_id <- paste(point_by_point$tny_name, 
+		point_by_point$server1, 
+		point_by_point$server2, 
+		point_by_point$year, sep = ":")
 
-# point_by_point$Set1[index1] <- sapply(point_by_point$Set1[index1], add_semicolon)
-# point_by_point$Set2[index2] <- sapply(point_by_point$Set2[index2], add_semicolon)
-# point_by_point$Set3[index3] <- sapply(point_by_point$Set3[index3], add_semicolon)
-# point_by_point$Set4[index4] <- sapply(point_by_point$Set4[index4], add_semicolon)
-# point_by_point$Set5[index5] <- sapply(point_by_point$Set5[index5], add_semicolon)
+matches <- names(table(point_by_point$match_id)[table(point_by_point$match_id) > 1])
+exclude <- sapply(matches, function(x) which(x == point_by_point$match_id)[1])
 
-# point_by_point$year <- year(point_by_point$tny_date)
+point_by_point <- point_by_point[-exclude,]
+		
+index1 <- !grepl(";", point_by_point$Set1) & !is.na(point_by_point$Set1)
+index2 <- !grepl(";", point_by_point$Set2) & !is.na(point_by_point$Set2)
+index3 <- !grepl(";", point_by_point$Set3) & !is.na(point_by_point$Set3)
+index4 <- !grepl(";", point_by_point$Set4) & !is.na(point_by_point$Set4)
+index5 <- !grepl(";", point_by_point$Set5) & !is.na(point_by_point$Set5)
 
-# atp_points <- do.call("rbind", lapply(1:nrow(point_by_point), function(x) {
-	# result <- pbp(point_by_point[x,])
-	# result$match_id <- paste(point_by_point[x,]$tny_name, 
-		# point_by_point[x,]$server1, 
-		# point_by_point[x,]$server2, 
-		# point_by_point[x,]$year, sep = ":")
-# result
-# }))
+point_by_point$Set1[index1] <- sapply(point_by_point$Set1[index1], add_semicolon)
+point_by_point$Set2[index2] <- sapply(point_by_point$Set2[index2], add_semicolon)
+point_by_point$Set3[index3] <- sapply(point_by_point$Set3[index3], add_semicolon)
+point_by_point$Set4[index4] <- sapply(point_by_point$Set4[index4], add_semicolon)
+point_by_point$Set5[index5] <- sapply(point_by_point$Set5[index5], add_semicolon)
 
 
-# atp_points$tournament <- sub("(.ATP)(.*)(:.*:.*:.*)", "\\2", atp_points$match_id)
+atp_points <- do.call("rbind", lapply(1:nrow(point_by_point), function(x) {
+	result <- pbp(point_by_point[x,])
+	result$match_id <- point_by_point$match_id[x]
+result	
+}))
 
-# # Limit to 250+
-# data(atp_matches)
+atp_points$tournament <- sub("(.ATP)(.*)(:.*:.*:.*)", "\\2", atp_points$match_id)
 
-# tourney_name <- unique(atp_matches$tourney_name[
-	# year(atp_matches$tourney_start_date) >= 2010 &
-	# !(atp_matches$tourney_level %in% c("Challenger", "Tour Finals", "Davis Cup"))
-# ])
+# Limit to 250+
+data(atp_matches)
 
-# tournaments <- c(
-	# "Auckland", 
-	# "Munich", 
-	# "Madrid", 
-	# "Belgrade", 
-	# "Houston", 
-	# "Wimbledon", 
-	# "Estoril", 
-	# "Montpellier", 
-	# "Zagreb", 
-	# "Valencia", 
-	# "Casablanca", 
-	# "Nice", 
-	# "s Hertogenbosch", 
-	# "US Open", 
-	# "Bucharest", 
-	# "St. Petersburg", 
-	# "Atlanta", 
-	# "Qatar", 
-	# "New Haven", 
-	# "Johannesburg", 
-	# "Shanghai", 
-	# "Australian Open", 
-	# "Buenos Aires", 
-	# "Stockholm", 
-	# "Santiago", 
-	# "Halle", 
-	# "Paris", 
-	# "Rogers Cup", 
-	# "Cincinnati", 
-	# "Los Angeles", 
-	# "San Jose", 
-	# "Barcelona", 
-	# "Sydney", 
-	# "Brisbane", 
-	# "Vienna", 
-	# "Eastbourne", 
-	# "Costa do Sauipe", 
-	# "Beijing", 
-	# "Umag", 
-	# "Moscow", 
-	# "Metz", 
-	# "Tokyo", 
-	# "Basel", 
-	# "Stuttgart", 
-	# "Acapulco", 
-	# "Kuala Lumpur", 
-	# "French Open", 
-	# "Rotterdam", 
-	# "Indian Wells", 
-	# "Memphis", 
-	# "Miami", 
-	# "Bangkok", 
-	# "Bastad", 
-	# "Gstaad", 
-	# "Newport", 
-	# "Queens", 
-	# "Delray Beach",
-	 # "Dubai", 
-	 # "Marseille", 
-	 # "Chennai", 
-	# "Monte Carlo", 
-	# "Hamburg", 
-	# "Rome", 
-	# "Washington", 
-	# "Dusseldorf", 
-	# "Kitzbuhel", 
-	# "Winston Salem", 
-	# "Sao Paulo", 
-	# "Bogota", 
-	# "Vina del Mar", 
-	# "Shenzhen", 
-	# "Rio de Janeiro", 
-	# "Istanbul", 
-	# "Quito", 
-	# "Miami", 
-	# "London", 
-	# "Eastbourne", 
-	# "Madrid", 
-	# "Rome",
-	# "Geneva")
+tourney_name <- unique(atp_matches$tourney_name[
+	year(atp_matches$tourney_start_date) >= 2010 &
+	!(atp_matches$tourney_level %in% c("Challenger", "Tour Finals", "Davis Cup"))
+])
+
+tournaments <- c(
+	"Auckland", 
+	"Munich", 
+	"Madrid", 
+	"Belgrade", 
+	"Houston", 
+	"Wimbledon", 
+	"Estoril", 
+	"Montpellier", 
+	"Zagreb", 
+	"Valencia", 
+	"Casablanca", 
+	"Nice", 
+	"s Hertogenbosch", 
+	"US Open", 
+	"Bucharest", 
+	"St. Petersburg", 
+	"Atlanta", 
+	"Qatar", 
+	"New Haven", 
+	"Johannesburg", 
+	"Shanghai", 
+	"Australian Open", 
+	"Buenos Aires", 
+	"Stockholm", 
+	"Santiago", 
+	"Halle", 
+	"Paris", 
+	"Rogers Cup", 
+	"Cincinnati", 
+	"Los Angeles", 
+	"San Jose", 
+	"Barcelona", 
+	"Sydney", 
+	"Brisbane", 
+	"Vienna", 
+	"Eastbourne", 
+	"Costa do Sauipe", 
+	"Beijing", 
+	"Umag", 
+	"Moscow", 
+	"Metz", 
+	"Tokyo", 
+	"Basel", 
+	"Stuttgart", 
+	"Acapulco", 
+	"Kuala Lumpur", 
+	"French Open", 
+	"Rotterdam", 
+	"Indian Wells", 
+	"Memphis", 
+	"Miami", 
+	"Bangkok", 
+	"Bastad", 
+	"Gstaad", 
+	"Newport", 
+	"Queens", 
+	"Delray Beach",
+	 "Dubai", 
+	 "Marseille", 
+	 "Chennai", 
+	"Monte Carlo", 
+	"Hamburg", 
+	"Rome", 
+	"Washington", 
+	"Dusseldorf", 
+	"Kitzbuhel", 
+	"Winston Salem", 
+	"Sao Paulo", 
+	"Bogota", 
+	"Vina del Mar", 
+	"Shenzhen", 
+	"Rio de Janeiro", 
+	"Istanbul", 
+	"Quito", 
+	"Miami", 
+	"London", 
+	"Eastbourne", 
+	"Madrid", 
+	"Rome",
+	"Geneva")
 	
-# matches <- lapply(gsub(" ","",tolower(tournaments)), function(x) 
-	# grep(x, gsub("-","",tolower(atp_points$match_id))))	
+matches <- lapply(gsub(" ","",tolower(tournaments)), function(x) 
+	grep(x, gsub("-","",tolower(atp_points$match_id))))	
 
-# atp_points$tournament <- NA
+atp_points$tournament <- NA
 
-# for(i in 1:length(tournaments)){
-	# atp_points$tournament[matches[[i]]] <- tournaments[i]
-# }
+for(i in 1:length(tournaments)){
+	atp_points$tournament[matches[[i]]] <- tournaments[i]
+}
 
-# atp_points <- atp_points[!is.na(atp_points$tournament),]
+atp_points <- atp_points[!is.na(atp_points$tournament),]
 
 
-# # Assign returner
-# atp_points <- do.call("rbind", lapply(split(atp_points, f = atp_points$match_id), function(obj){
-	# players <- unique(obj$serve)
-	# obj$returning <- ifelse(obj$serve == players[1], players[2], players[1])
-# obj
-# }))
+# Assign returner
+atp_points <- do.call("rbind", lapply(split(atp_points, f = atp_points$match_id), function(obj){
+	players <- unique(obj$serve)
+	obj$returning <- ifelse(obj$serve == players[1], players[2], players[1])
+obj
+}))
 
-# names(atp_points)[names(atp_points) == "serve"] <- "serving"
+names(atp_points)[names(atp_points) == "serve"] <- "serving"
 
-# points_played <- atp_points %>%
-	# group_by(serving) %>%
-	# dplyr::summarise(
-		# points = length(serving),
-		# matches = length(unique(match_id)),
-		# grand_slam = length(unique(match_id[tournament %in% c("Australian Open","US Open","French Open","Wimbledon")]))
-# )
+points_played <- atp_points %>%
+	group_by(serving) %>%
+	dplyr::summarise(
+		points = length(serving),
+		matches = length(unique(match_id)),
+		grand_slam = length(unique(match_id[tournament %in% c("Australian Open","US Open","French Open","Wimbledon")]))
+)
 
-# matches <- unique(atp_points$match_id[atp_points$serving %in% points_played$serving[points_played$matches < 3]])
+matches <- unique(atp_points$match_id[atp_points$serving %in% points_played$serving[points_played$matches < 3]])
 
-# # Remove if fewer than 3 matches
-# atp_points <- atp_points[!(atp_points$match_id %in% matches), ]
+# Remove if fewer than 3 matches
+atp_points <- atp_points[!(atp_points$match_id %in% matches), ]
 			
-# atp_points <- do.call("rbind", lapply(split(atp_points, f = atp_points$match_id), function(obj){
+atp_points <- do.call("rbind", lapply(split(atp_points, f = atp_points$match_id), function(obj){
 
-	# print(obj$match_id[1])
+	print(obj$match_id[1])
 	
-	# obj$before_breakpoint <- 
-		# ((obj$return_points == 2 & obj$serve_points <= 2) |
-		# (obj$return_points == 3 & obj$serve_points == 3)) &
-		# !obj$tiebreak
+	obj$before_breakpoint <- 
+		((obj$return_points == 2 & obj$serve_points <= 2) |
+		(obj$return_points == 3 & obj$serve_points == 3)) &
+		!obj$tiebreak
 	
-	# if(any(obj$tiebreak)){
-		# obj <- obj %>%
-			# group_by(Set) %>%
-			  # dplyr::mutate(
-			  	# max_tiebreak = max(c(max(serve_points[tiebreak]), max(return_points[tiebreak])))
-			  # )
-	# }
-	# else{
-		# obj$max_tiebreak <- NA
-	# }		  
+	if(any(obj$tiebreak)){
+		obj <- obj %>%
+			group_by(Set) %>%
+			  dplyr::mutate(
+			  	max_tiebreak = max(c(max(serve_points[tiebreak]), max(return_points[tiebreak])))
+			  )
+	}
+	else{
+		obj$max_tiebreak <- NA
+	}		  
 	
-	# serve_games <- obj %>% 
-		# group_by(Set, serving) %>% 
-		# dplyr::summarise(games = sum(serve_score == "GM"))
+	serve_games <- obj %>% 
+		group_by(Set, serving) %>% 
+		dplyr::summarise(games = sum(serve_score == "GM"))
 
-	# return_games <- obj %>% 
-		# group_by(Set, returning) %>% 
-		# dplyr::summarise(games = sum(return_score == "GM"))
+	return_games <- obj %>% 
+		group_by(Set, returning) %>% 
+		dplyr::summarise(games = sum(return_score == "GM"))
 	
-	# serve_games$games <- 	serve_games$games + return_games$games
-	# player <- serve_games$serving[1]
+	serve_games$games <- 	serve_games$games + return_games$games
+	player <- serve_games$serving[1]
 
-	# player_games <- subset(serve_games, serving == player)
-	# opponent_games <- subset(serve_games, serving != player)
+	player_games <- subset(serve_games, serving == player)
+	opponent_games <- subset(serve_games, serving != player)
 	
-	# player_games$games <- player_games$games > opponent_games$games
-	# opponent_games$games <- !player_games$games
+	player_games$games <- player_games$games > opponent_games$games
+	opponent_games$games <- !player_games$games
 
-	# player_games$cumsets <- cumsum(player_games$games)
-	# opponent_games$cumsets <- cumsum(opponent_games$games)
+	player_games$cumsets <- cumsum(player_games$games)
+	opponent_games$cumsets <- cumsum(opponent_games$games)
 	
-	# obj$set_down <- FALSE
-	# obj$set_up <- FALSE
+	obj$set_down <- FALSE
+	obj$set_up <- FALSE
 	
-	# for(i in 2:max(player_games$Set)){
-		# if(player_games$cumsets[i-1] - opponent_games$cumsets[i-1] == 1)
-			# obj$set_up[obj$serving == player & obj$Set == i] <- TRUE
+	for(i in 2:max(player_games$Set)){
+		if(player_games$cumsets[i-1] - opponent_games$cumsets[i-1] == 1)
+			obj$set_up[obj$serving == player & obj$Set == i] <- TRUE
 			
-		# if(player_games$cumsets[i-1] - opponent_games$cumsets[i-1] == -1)
-			# obj$set_down[obj$serving == player & obj$Set == i] <- TRUE	
+		if(player_games$cumsets[i-1] - opponent_games$cumsets[i-1] == -1)
+			obj$set_down[obj$serving == player & obj$Set == i] <- TRUE	
 			
-		# if(player_games$cumsets[i-1] - opponent_games$cumsets[i-1] == 1)
-			# obj$set_down[obj$serving != player & obj$Set == i] <- TRUE
+		if(player_games$cumsets[i-1] - opponent_games$cumsets[i-1] == 1)
+			obj$set_down[obj$serving != player & obj$Set == i] <- TRUE
 			
-		# if(player_games$cumsets[i-1] - opponent_games$cumsets[i-1] == -1)
-			# obj$set_up[obj$serving != player & obj$Set == i] <- TRUE					
-	# }
+		if(player_games$cumsets[i-1] - opponent_games$cumsets[i-1] == -1)
+			obj$set_up[obj$serving != player & obj$Set == i] <- TRUE					
+	}
 	
-# obj
-# }))
+obj
+}))
 
-# atp_points$set_up <- as.numeric(atp_points$set_up)
-# atp_points$set_down <- as.numeric(atp_points$set_down)
+atp_points$set_up <- as.numeric(atp_points$set_up)
+atp_points$set_down <- as.numeric(atp_points$set_down)
 
-# atp_points$max_tiebreak[!is.finite(atp_points$max_tiebreak)] <- NA
-# rownames(atp_points) <- NULL
-# atp_points <- unique(atp_points)
+atp_points$max_tiebreak[!is.finite(atp_points$max_tiebreak)] <- NA
+rownames(atp_points) <- NULL
+atp_points <- unique(atp_points)
 
-# # Remove several matches with possible misentry
-# max_games <- atp_points  %>%
-	# filter(Set < 5) %>%
-	# group_by(match_id) %>%
-	# dplyr::summarise(
-		# max = max(Game)
-	# )
+# Remove several matches with possible misentry
+max_games <- atp_points  %>%
+	filter(Set < 5) %>%
+	group_by(match_id) %>%
+	dplyr::summarise(
+		max = max(Game)
+	)
 
-# problem_ids <- max_games$match_id[max_games$max > 13]
-# atp_points <- atp_points[!(atp_points$match_id %in% problem_ids),]
+problem_ids <- max_games$match_id[max_games$max > 13]
+atp_points <- atp_points[!(atp_points$match_id %in% problem_ids),]
 
-# save(atp_points, file = "~/Project/tennis/iid/data/atp_points.RData")
+save(atp_points, file = "~/Project/tennis/iid/data/atp_points.RData")
+
 load(file = "~/Project/tennis/iid/data/atp_points.RData")
 
 # Track cumulative sets and games won
