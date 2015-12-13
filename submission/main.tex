@@ -38,36 +38,67 @@
 
 \begin{abstract}
 It is often said that winning in tennis is determined as much by a
-player's mental game as their physical ability. However, understanding the importance of a player's mindset on
-court is currently limited by a lack of analytics for 
-the psychological dimension of performance. We present a framework for
-measuring the mental game in tennis that is based on dynamic patterns
-in point win probabilities. Using a database of 1.6
-million points played on the men's tour and 1.3 million points on the
-women's tour, we develop a mixed multi-level statistical model to
-estimate dynamic effects in serve and return performance for male and
-female players and apply an agglomerative clustering method to
-identify distinct patterns in performance dynamics. [Present]
+player's mental game as his or her physical ability yet quantifiable
+metrics for the mental side of the game are lacking. We present an
+approach to identify mentalities in tennis with dynamic response
+patterns that quantify how players probability of winning a point vary
+in response to the changing situations of a match. Using nearly 3
+million points played by professional male and female tennis players between
+2011 and 2015, we found that top players were
+generally affected by the state of the score and a variety of pressure
+situations, exhibiting hot hand effects when up in the match,
+defeatist effects when down, and performing less effectively in clutch
+situations than on less important points. However, player-to-player
+variation in these dynamic effects revealed that not all players
+shared the average mentality profile. The distinct ways in which
+players deviated from the field highlighted a variety of differences
+in how players respond to pressure and point history and suggested a
+diversity of player mentalities at the elite
+level. Accounting for these dynamic changes in performance were shown
+to improve the prediction of match outcomes for the men's and women's
+games, substantiating the importance of mentality for performance in tennis.
 
-Our dynamic point-level model provides a framework for building a taxonomy of performance
-profiles that can yield insights into a tennis player's mindset on court and
-adaptability to changes in conditions during a match. Unique in its
-ability to quantify mental aspects of the game, the dynamic model
-promises to be a
-useful resource for coaches and broadcasters to advance the evaluation
-of tennis player performance.
+
+
 \keywords{Tennis\and Player evaluation\and Mixed modeling\and Hierarchical clustering}
 \end{abstract}
 
 \section{Introduction}
 
-It is often said that the mental game is one of the most important
-determinants of success in professional tennis. Yet scientific study
-of the mental game and its effect on player performance has been limited.
+Mentality is an essential ingredient of all athletic
+performance. However, the importance of a player's mental skills in
+deciding the outcomes of competition or how fans experience
+competition varies widely across sports. Tennis, the
+most popular individual sport in the
+world\footnote{\url{http://www.biggestglobalsports.com}}, is
+frequently said to be as much about the mind as the body. Indeed, Jimmy Connors, holder
+of 109 career titles, has gone so far as to estimate that 95\% of tennis is a mind
+game\cite{samulski2007tennis}. Despite these claims, the mental side
+of tennis has received limited scientific study and there is currently
+a lack of quantitative
+evidence about the mentalities of today's top tennis players.
 
-In this paper, we use five years of point-level data to identify
-mentality types on the men's and women's professional tours and
-quantify the importance of mentality for point and match wins. 
+Prior work attempting to measure the mental aspect of elite
+athletic performance has been limited for all sports let alone
+tennis, reflecting the challenges of
+measuring the mental game. Prior approaches have largely been
+qualitative in nature, relying on interviews\cite{young2011understanding} or surveys\cite{taylor1987predicting} of players and
+coaches to gain insight about the mental game. These studies have the
+drawback that they presuppose that salient mental skills can be
+measured with a questionnaire or elicited from a conversation with
+coaches and players. Such studies have also not taken advantage of the
+many years of historical performance data and what it can reveal about the mental game. 
+
+In this paper, we present a novel quantitative method to investigate the mentality
+of professional tennis players from observed match performance. Our approach is based on the premise
+that tennis player's
+reveal aspects of their mental skills in the way they respond to
+changes in the state of play over the course of match, i.e. the
+dynamics of a match. Using nearly 3 million points played in
+professional singles matches for the men's and women's tours between 2011 and 2015, we quantify player
+response patterns to point dynamics, identify common mentalities, and
+evaluate the importance of mentality for match performance. 
+
 
 \section{Methods}
 
@@ -265,8 +296,21 @@ allows comparisons between non-nested models and awards more parsimonious models
 dynamic predictor, we estimated the change in AIC with the inclusion
 of player-specific effects versus a constant effect for all players. 
 
-We evaluated the extent to which accounting for dynamic effects
-improved predictions for point and match outcomes...
+To assess the implications of mentality on points for predicting the
+outcomes of matches, we used a Monte Carlo simulation to test the
+predictive performance of the PDM. The simulator ran $5,000$ trial
+matches for each pairing of the 2015 Grand Slams (a best-of-five
+format for the ATP and best-of-three for the WTA). Each simulated point on serve
+in a match adjusted the server's probability of winning the point
+according to the state of that point as described by the PDM, and the
+fraction of trial matches won gave an estimate of the probability that
+a player won the match. The
+player dynamic match predictions were compared to two alternative
+models: the ADM that assumes constant dynamic effects for all players
+and an IID model that assumes no dynamic effects, i.e. a constant
+point win
+probability for each server. Our primary metric of performance was
+log loss, as it places a high penalty on overconfident predictions\cite{yuan2015mixture}. 
 
 
 
@@ -490,9 +534,40 @@ player responses to the total points played in a game were more variable.
 
 \subsection{Model Performance}
 
-[Table of performance results]
+On the ATP, the importance of mental effects
+was confirmed by the greater accuracy and lower log loss for the
+predictions of the dynamic models compared to the IID model (Table
+\ref{tab:performance}). The consistent superior performance of the PDM
+over the ADM substantiates the importance of player differences in
+response to the changing situations of match play on the men's tour.
 
-[Paragraph summarizing]
+While the dynamic models also improved match predictions for the
+women's tour, the differences were smaller than for the men's and the
+performance of the average and player-specific dynamic models were
+statistically equivalent. 
+
+\begin{table} \centering
+\caption{Summary of Match Prediction Performance for the 2015 Grand Slams}
+\begin{tabular}{l ccc ccc} \hline
+\multirow{2}{*}{Tournament} & \multicolumn{3}{c}{Accuracy} & \multicolumn{3}{c}{Log Loss} \\ 
+&	IID &ADM &PDM &IID &ADM &PDM \\ \hline
+\textbf{ATP} & & & & & & \\
+~~Australian Open	&73.3&	74.1&	75.9&	0.516&	0.505	&0.491\\
+~~French Open	&70.6&	71.4&	73.9&	0.552&	0.541	&0.532\\
+~~US Open	&75.5&	75.5&	76.4&	0.507&	0.496&	0.493\\
+~~Wimbledon	&73.3&	72.5&	72.5&	0.540&	0.523&	0.517\\
+~Overall	&73.1&	73.3&	74.6&	0.529&	0.517&	0.509                    \\
+\textbf{WTA}  & & & & & & \\
+~~Australian Open	&74.0&	73.2&	73.2&	0.595&	0.573&	0.576\\
+~~French Open	&72.7&	71.1&	71.9&	0.568&	0.561&	0.563\\
+~~US Open	&65.8&	65.0&	64.2&	0.663&	0.632&	0.634\\
+~~Wimbledon	&70.4&	70.4&	71.2&	0.568&	0.555&	0.560\\
+~Overall	&70.8&	69.9&	70.1&	0.598	&0.580& 0.583\\ \hline
+\multicolumn{7}{p{3.8in}}{IID = Independent identically distributed, ADM =
+  Average dynamic model, PDM = Player dynamic model}
+\end{tabular}
+\label{tab:performance}
+\end{table}
 
 \subsection{Mentality Profiles}
 
@@ -573,8 +648,8 @@ the return game. Several of the most exciting players today's
 game\textemdash Jo Wilfried Tsonga and Gael Monfils\textemdash are
 included in this group.
 
-\textit{Chokers}. This mentality was the only one that was noteworthy for being
-mentally weaker on certain points than the average top
+\textit{Tight}. This mentality was the only one that was noteworthy
+for being weaker on certain points than the average top
 player. Specifically, in clutch situations on serve and when down a
 point or a set on the return game, these players showed a greater drop
 in win probability than any others. Finding former
@@ -616,7 +691,7 @@ unaffected by the state of the score or the importance of points other
 than break points. On the service game, these players were also the least
 negatively affected by pressure and the least phased by being a set
 down. Two players often praised for their mental toughness\textemdash
-Maria Sharapova and Victoria Azarenaka\textemdash were found in this
+Maria Sharapova and Victoria Azarenka\textemdash were found in this
 group.
 
 \textit{Faders}. In sharp contrast to the `fighters' described above,
@@ -684,20 +759,110 @@ characteristics of a champion at the professional level.
 
 \section{Discussion}
 
-Summary of what was done and main conclusions about the typical
-mentality on tour [Make sure to comment on the effects of pressure
-points beyond point importance]
+In this paper, we presented a novel approach to quantify changes in
+tennis performance in response to dynamic situations on serve and
+return in a match. When applied to millions of points of recent performance data, we found that top players were
+generally affected by the state of the score and a variety of pressure
+situations, exhibiting hot hand effects when up in the match,
+defeatist effects when down, and performing less effectively in clutch
+situations than on less important points. However, player-to-player
+variation in these dynamic effects revealed that not all players
+shared the average mentality profile. The distinct ways in which
+players deviated from the field highlighted a variety of differences
+in how players respond to pressure and point history and suggested a
+diversity of player mentalities at the elite
+level. Accounting for these dynamic changes in performance were shown
+to improve the prediction of match outcomes for the men's and women's
+games, substantiating the importance of mindset for performance in tennis.
 
-Difference between ability and dynamics
 
-The  'champion'  mentality
+A fundamental feature of our approach for measuring mentality is the isolation of a player's response to changing
+match situations from his or her overall win ability. This is done by
+focusing on how a player's performance varies around his or her own
+baseline probability of winning a point. As a
+consequence of this separation of baseline ability from point-to-point
+variation in performance, the approach allows that players with
+different physical skills could still share a common
+mentality. 
 
-Benefit for development?
+In spite of this flexibility in the approach, our findings revealed
+instances where the physical and
+mental sides of the game were closely linked. This was most striking
+on the men's tour in the clustering of players known for their big
+service game (John Isner, Milos Raonic, etc.) and the similarity in
+the profiles of the most dominant players of the tour. The finding
+that all of the `Big 4' (Novak Djokovic,
+Roger Federer, Andy Murray, and Rafael Nadal) deviated in very similar
+ways in response to changes in pressure and point history suggests
+the existence of a champion's mentality that is notable for clutch
+performance on the return and relative imperviousness to the
+conditions of the point on serve. 
 
-Benefit for training?
+Another interesting relationship between player skill level and
+point-to-point performance among ATP players was the finding that 3 of
+the most accomplished players on the men's game (Roger Federer, Novak
+Djokovic, and Rafael Nadal) were also some of the most predictable
+players on serve and most unpredictable on return. Considering this
+result with the qualities of the champion profile that was
+characterized by stoic serve ability and an attacking defensive game,
+we conclude that the most successful players on the men's tour distinguish themselves for their
+mental toughness [cite] on serve and their variety on the return
+game, which challenges the conclusions of prior work stating that
+players should `play every point as it comes'\cite{klaassen2001points}.
 
-Limitations. Few dynamic effects, Difficulty of attribute cause to
-one player in two-player contests
+The average dynamic effects for the men's and women's tour were
+remarkably similar, with the only statistical difference being the
+women's absence of an average effect on points a point away from a
+break point that was found to negatively effect men's serve
+performance overall. However, player variation in effects was less extensive on the women's
+tour compared to the men's tour. Fewer of the dynamic variables showed
+significant player-to-player variation for female players, and the
+variation that was observed was largely restricted to the service
+game. This suggests that the variety of mentalities on the women's
+tour might be less numerous than the men's or that other dynamic
+factors not considered in this paper are needed to explain variation
+in female point performance. 
+
+When we examined the unexplained variation among female players, we
+found that two of the current greatest female players, Serena Williams
+and Maria Sharapova, had similar characteristics as the male
+champions. These players were some of the steadiest players on serve
+but the most variable on return. The observation of this pattern on
+both tours adds strength to the conclusion that champions share common
+mental skills on court and further suggests that the champion's
+profile might be independent of gender.
+
+In interpreting the observed point-to-point changes in performance, we
+have regarded these deviations as indicators of shifts in psychological traits of
+a player like confidence, mental toughness, or resilience. It is
+important to acknowledge other possible explanations for systematic fluctuations in
+performance. Shifts of performance with specific match situations could be a
+conscious tactic, like a defender who might plan to take bigger risks
+when a point from a break point opportunity. Also, because point-level
+data is the result of the behavior of two players, it is possible that
+observed changes associated with a particular player are owing to the
+ways other players adapt to that player's game, like players becoming
+tight on big points when facing a top 10 player. 
+
+Even with uncertainty as to the definitive causes of point-to-point
+differences in player performance, the measurement of these deviations
+could be a valuable aid to coaches by visually highlighting the
+relative strengths and weaknesses in how their player's performance
+changes with specific match conditions. When a player's profile is
+placed in the larger context of the field, it can also suggest players
+with similar and different responses to match situations, which could
+suggest strategies for modifying a player's game where room for
+improvement is needed. Such visual displays as presented her could
+also be an engaging way to contrast player performance to fans.
+
+Present efforts are underway to amass shot-by-shot data that would
+enable the study of performance to go beyond the simple outcome of the
+point when characterizing player performance. Ball and player
+position tracking from camera and wearable technologies will also
+become increasingly common over time. As richer and more detailed data
+on tennis performance becomes available in the future, the framework
+we have presented in this paper provides analysts with a valuable tool
+for evaluating player mentality at an increasingly precise level of detail.
 
 
 \bibliographystyle{Latex/spmpsci} 
@@ -767,5 +932,3 @@ for each tour are labeled.}
 
 
 \end{document}
-
-Industry of sports psychologists
